@@ -1,4 +1,4 @@
-module race_functions
+module accumulator_functions
 
 using PyPlot, Distributions, SpecialFunctions, LaTeXStrings, LambertW, CurveFit, LinearAlgebra
 
@@ -281,9 +281,9 @@ function compute_even_allocation(σ,μ_0,σ_0_G,N_points,utility_plots = false,N
     Δu = u_max/N_points
     if utility_plots == true
         powers = collect(0:4)
-        bases = [1,2,3]
+        bases = [1,2,3,5]
         #Capacities to test
-        C = [1E2,1E3,1E4] 
+        C = [1E0,1E1,1E2] 
     else
         powers = collect(0:2)
         bases = [1,2,3,4,5,6,7,8,9]
@@ -313,7 +313,6 @@ function compute_even_allocation(σ,μ_0,σ_0_G,N_points,utility_plots = false,N
     Us_simG = zeros(length(C),length(M))
     Us_anG_plot = zeros(length(C),length(M))
     for i in 1:length(C)
-        maxM = length(M)
         if utility_plots == false
             #The Ms that will be used to search for the maximum
             M = [1,2,3,4,5,6,7,8,9]
