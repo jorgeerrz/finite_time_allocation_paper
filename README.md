@@ -1,5 +1,5 @@
 # Optimal allocation of finite sampling capacity in accumulator models of multialternative decision making
- Repository containing all the Julia code used for the paper by Jorge Ramírez-Ruiz and Rubén Moreno-Bote.
+ Repository containing all the Julia v1.1 code used for this paper.
 
 All the functions are in the accumulator_functions.jl module.
 The jupyter notebook "Paper_notebook.ipynb" can reproduce all the figures presented in the manuscript.
