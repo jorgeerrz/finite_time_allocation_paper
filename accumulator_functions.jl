@@ -20,6 +20,7 @@ export deriv_Gaussian
 export compute_ascent_CV 
 export compute_ascent_distances_symmetric
 export ascent
+export small_C_Utility
 
 function normal(z,mean,variance)
     exp(-(z-mean)^2/(2*variance))/sqrt(2*pi*variance)
@@ -270,7 +271,7 @@ If `utility_plots = false`, it returns a tuple containing the optimal Ms,
 - `def` subscript refers to the case when a default option can be chosen.
 - `sim` referes to simulations, its absence means it is numerical integration.
 """
-function compute_even_allocation(σ,μ_0,σ_0_G,N_points,utility_plots = false,N_sim_scale = 1E6, sim = false)
+function compute_even_allocation(σ,μ_0,σ_0_G,N_points,utility_plots = false,N_sim_scale = 1E6, sim = false, appendix = false)
     σ_0_F = 1/sqrt(12)
     μ_1 = -1#-4.5
     μ_2 = 2#5.5
@@ -283,8 +284,11 @@ function compute_even_allocation(σ,μ_0,σ_0_G,N_points,utility_plots = false,N
         powers = collect(0:4)
         bases = [1,2,3,5]
         #Capacities to test
-        C = [1E0,1E1,1E2] 
-    else
+        if appendix == false
+            C = [1E0,1E1,1E2] 
+        else
+            C = [1E-2,5E-2,1E-1]
+        end    else
         powers = collect(0:2)
         bases = [1,2,3,4,5,6,7,8,9]
         #Capacities to test
@@ -405,12 +409,33 @@ function compute_even_allocation(σ,μ_0,σ_0_G,N_points,utility_plots = false,N
     C,out
 end
 
+function integral(M)
+    dz = 0.01
+    int_interval = collect(-100:dz:100)
+    out = 0
+    for z in int_interval
+        out += dz*z*exp(-z^2/2)*(1/2 + erf(z/sqrt(2))/2)^(M-1)
+    end
+    out
+end
+
+function small_C_utility(Ms,Cs,μ_0,σ_0)
+    utilities = zeros(length(Cs),length(Ms))
+    for (j,c) in enumerate(Cs)
+        for (i,m) in enumerate(Ms)
+            utilities[j,i] = μ_0 + σ_0*sqrt(c/(2*pi))*(sqrt(m)*integral(m))
+        end
+    end
+    utilities
+end
+
 """
     plot_utility_even(C,M,Us_sim,Us_an)
 
 Plots Fig. 3. Input is output from `compute_even_allocation` with `utility_plots = true`.
 """
-function plot_utility_even(C,M,Us_sim,Us_an)
+
+function plot_utility_even(C,M,Us_sim,Us_an,appendix = false)
     widthCM = 12
     heightCM = 8
     f = figure(figsize=(widthCM/2.54, heightCM/2.54), dpi=72)
@@ -422,7 +447,11 @@ function plot_utility_even(C,M,Us_sim,Us_an)
     indices = [6,8,10]
     colors = get_cmap("gray_r")
     cindex = [0.2,0.5,0.9]
-    labels = ["C = 1","C = 10","C = 100"]
+    if appendix == false
+        labels = ["C = 1","C = 10","C = 100"]
+    else
+        labels = ["C = 0.01","C = 0.05","C = 0.1"]
+    end
     ax.semilogx(M,0.5.*ones(length(M)),"--",linewidth=2,color = "gray")
     for (idx,c) in enumerate(C)
         ax.semilogx(M,Us_an[idx,:],"-", color = colors(cindex[idx]),label = labels[idx])
@@ -431,18 +460,26 @@ function plot_utility_even(C,M,Us_sim,Us_an)
         ax.semilogx(M[idx_max],Us_an[idx,idx_max],"o",color = "royalblue",markersize = 6)
     end
 
-    tight_layout(rect = [0.08, 0.08, 1, 1])
+    tight_layout(rect = [0.05, 0.08, 0.9, 1])
 
     ax.set_xlim([0,1E5])
-    ax.set_ylim([0.0,2.7])
+    if appendix == false
+        ax.set_ylim([0.0,2.7])
+    else
+        ax.set_ylim([0.48,0.7])
+    end
     ax.set_xticks([1E0,1E1,1E2,1E3,1E4,1E5])
+    if appendix == false
     ax.set_yticks([0.0,0.5,1.0,1.5,2.0,2.5])
-    ax.tick_params(labelsize=16,direction = "out",top=false)
+    else
+        ax.set_yticks([0.5,0.6,0.7])
+    end
+    ax.tick_params(labelsize=14,direction = "out",top=false)
 
-    ax.set_xlabel(L"Number $M$ of sampled accumulators",fontsize = 16)
-    ax.set_ylabel("Expected utility",rotation=90,fontsize = 16)
+    ax.set_xlabel(L"Number $M$ of sampled accumulators",fontsize = 14)
+    ax.set_ylabel("Expected utility",rotation=90,fontsize = 14)
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles[end:-1:1],labels[end:-1:1],loc=1,fontsize=14, ncol = 1, frameon =false)
+    ax.legend(handles[end:-1:1],labels[end:-1:1],loc=1,fontsize=12, ncol = 1, frameon =false)
 end
 
 """
